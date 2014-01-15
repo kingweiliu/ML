@@ -1,3 +1,5 @@
+from numpy import *
+import operator
 
 def classify0(inX, dataSet, labels, k):
 	dataCnt = dataSet.shape[0]
@@ -9,5 +11,5 @@ def classify0(inX, dataSet, labels, k):
 	for i in range(k):
 		 vLabel = labels[indexSort[i]]
 		 category[vLabel] = category.get(vLabel, 0) +1
-	sortedCat = sorted(category, key = operator.itemgetter(1), reverse = True)
+	sortedCat = sorted(category.iteritems(), key = operator.itemgetter(1), reverse = True)
 	return sortedCat[0][0]
