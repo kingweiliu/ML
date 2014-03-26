@@ -28,23 +28,16 @@ private:
 
 class QueueEightDelegate{
 public:
-
-  void static Init(){
-  }
-
   void static OnCalcComplete(long n){
     ::InterlockedExchangeAdd(&m_cnt, n);    
-   // std::cout<<m_cnt<<"\r";
+    std::cout<<m_cnt<<"\r";
   }
 
-  int static getCnt(){
-    return m_cnt;
-  }
+  int static getCnt(){   return m_cnt;  }
 
 private:
   static long m_cnt;
 };
-
 long QueueEightDelegate::m_cnt = 0;
 
 class QueueEight{
@@ -52,41 +45,31 @@ public:
     QueueEight():m_board(NULL), m_board_size(8){ }
 
     QueueEight(int size):m_board_size(size){
-        m_board = new bool[m_board_size*m_board_size];
+        m_board = new bool*[m_board_size];
+        for (int i =0;i<m_board_size;++i)
+        {
+            m_board[i] = new bool[m_board_size*m_board_size];
+        }        
+        
         for( int i =0;i<m_board_size; ++i){
             for(int j=0; j<m_board_size; ++j){
-                m_board[i*m_board_size + j] = false;
+                m_board[0][i*m_board_size + j] = false;
             }
         }
     }
 
-    QueueEight(const QueueEight* qe){
-        m_board_size = qe->m_board_size;
-        m_board = new bool[m_board_size*m_board_size];
-        memcpy(m_board, qe->m_board, sizeof(bool)* m_board_size*m_board_size);
-    }
-
   ~QueueEight(){
+      for (int i =0;i<m_board_size;++i)
+      {
+          delete[] m_board[i];
+      }        
     delete[] m_board;
   }
-
-    void test(){
-        std::cout<<"test"<<std::endl;
-    }
-
-    bool PlaceQueueOnRow(int idx){
-      for(int i = 0;i<m_board_size; ++i){
-        if (QueueExist(idx, i))
-          continue;
-        PlaceQueueOnPos(idx, i);
-      }
-      return true;
-    }
 
     void PlaceQueueOnPos(int row, int col){
       int cnt =0;
       {     
-        //PerformanceHelper ph("abc");
+        PerformanceHelper ph("abc");
         PlaceQueueOnPosInternal(row, col, cnt);
       }
       QueueEightDelegate::OnCalcComplete(cnt);
@@ -97,22 +80,23 @@ public:
         cnt ++;
       }
       else{
-        *(m_board+row*m_board_size+col) = true;              
-        QueueEight qe(this);                
-        qe.markboard(row, col);
+        *(m_board[row]+row*m_board_size+col) = true;              
+        
+        memcpy(m_board[row+1], m_board[row], sizeof(bool)*m_board_size*m_board_size);
+        markboard(m_board[row+1], row, col);
         for (int i = 0;i<m_board_size;++i)
         {          
-          if (qe.QueueExist(row+1, i))
+          if (QueueExist(m_board[row+1], row+1, i))
             continue;
-          qe.PlaceQueueOnPosInternal(row+1, i, cnt);
+          PlaceQueueOnPosInternal(row+1, i, cnt);
         }
-        *(m_board+row*m_board_size+col) = false;              
+        *(m_board[row]+row*m_board_size+col) = false;              
       }
       return cnt;
     }
 
-    bool inline QueueExist(int row, int col){
-      return *(m_board + row*m_board_size + col);
+    bool inline QueueExist(bool* board, int row, int col){
+      return *(board + row*m_board_size + col);
     }
 
     void print(){
@@ -126,23 +110,21 @@ public:
     }
 
 private:
-    bool markboard( int row, int col){
+    bool markboard(bool*board,  int row, int col){
         for(int i =row;i<m_board_size;++i){
-            *(m_board+i*m_board_size+col) = true;
+            *(board+i*m_board_size+col) = true;
         }
         for (int i=row+1, j=col-1 ; i<m_board_size && j>=0; ++i, --j)
-            *(m_board+i*m_board_size+j)=true;
+            *(board+i*m_board_size+j)=true;
         for(int i = row+1, j=col+1; i<m_board_size && j<m_board_size; ++i, ++j)
-            *(m_board+i*m_board_size+j)=true;
+            *(board+i*m_board_size+j)=true;
         return true;
     }
 
 private:
-    bool* m_board;
+    bool** m_board;
     int m_board_size;
 };
-
-
 
 class ThreadMgr{
 public:
@@ -157,7 +139,7 @@ public:
       m_threads[i]->Start();
     }
     {
-     // PerformanceHelper ph("internal-");
+      PerformanceHelper ph("internal-");
       QueueEight** qes = new QueueEight*[m_board_size];
       int cnt = 0;
       for(int i=0;i<m_board_size; ++i){
@@ -194,7 +176,6 @@ int main(int argc, char** argv){
   std::cout<< argc << std::endl;
   {
     PerformanceHelper ph;
-    QueueEightDelegate::Init();
     ThreadMgr tm(boardsize, threadcount);
     tm.Start();
   }  
