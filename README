@@ -1,4 +1,5 @@
 # Deep learning 学习
 入门材料
 1. 一个学习深度学习的视频教程 https://classroom.udacity.com/courses/ud730
-2. 《 A guide to convolution arithmetic for deep learning 》 https://arxiv.org/pdf/1603.07285v1.pdf 材料一种附带的资料，主要是讲卷积的。
+2. 《 A guide to convolution arithmetic for deep learning 》 https://arxiv.org/pdf/1603.07285v1.pdf 材料一中附带的资料，主要是讲卷积的。
+3. 《Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification》 https://arxiv.org/pdf/1502.01852.pdf， 在用tensorflow构建深层网时， 发现对于weight的取值很重要，有一套固定的办法
